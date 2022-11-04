@@ -8,6 +8,9 @@ interface IAPIResponse  { id: number, title: string, content: string }
 
 const FeedPage = (props: {}) => {
   const [ LAPIResponse, setLAPIResponse ] = React.useState<IAPIResponse[]>([]);
+  const [ EditId, setEditId ] = React.useState<number>(-1);
+  const [ EditPostTitle, setEditPostTitle ] = React.useState<string>("");
+  const [ EditPostContent, setEditPostContent ] = React.useState<string>("");
   const [ NPostCount, setNPostCount ] = React.useState<number>(0);
   const [ SNewPostTitle, setSNewPostTitle ] = React.useState<string>("");
   const [ SNewPostContent, setSNewPostContent ] = React.useState<string>("");
@@ -24,6 +27,16 @@ const FeedPage = (props: {}) => {
     asyncFun().catch((e) => window.alert(`Error while running API Call: ${e}`));
     return () => { BComponentExited = true; }
   }, [ NPostCount ]);
+
+  const EditClick=(id: string)=>{
+    const asyncFun = async () => {
+      const { data } = await axios.post<IAPIResponse>( SAPIBase + '/feed/editFeed', { id: id} );
+      setEditId(data.id);
+      setEditPostTitle(data.title);
+      setEditPostContent(data.content);
+    };
+    asyncFun().catch((e) => window.alert(`Error while running API Call: ${e}`));
+  }
 
   const createNewPost = () => {
     const asyncFun = async () => {
@@ -44,6 +57,26 @@ const FeedPage = (props: {}) => {
     asyncFun().catch(e => window.alert(`AN ERROR OCCURED! ${e}`));
   }
 
+  const editPost = (id:string) => {
+    const asyncFun = async ()=> {
+      await axios.post( SAPIBase + '/feed/editFeedSave', { id: id, title: EditPostTitle, content: EditPostContent } );
+      setEditId(-1);
+      setEditPostTitle("");
+      setEditPostContent("");
+    }
+    asyncFun().then(()=>{
+      let BComponentExited = false;
+      const asyncFun = async () => {
+        const { data } = await axios.get<IAPIResponse[]>( SAPIBase + `/feed/getFeed?count=${ NPostCount }`);
+        console.log(data);
+        if (BComponentExited) return;
+        setLAPIResponse(data);
+      };
+      asyncFun().catch((e) => window.alert(`Error while running API Call: ${e}`));
+      return () => { BComponentExited = true; }
+    }).catch(e => window.alert(`AN ERROR OCCURED! ${e}`));
+  }
+
   return (
     <div className="Feed">
       <Header/>
@@ -56,11 +89,19 @@ const FeedPage = (props: {}) => {
       </div>
       <div className={"feed-list"}>
         { LAPIResponse.map( (val, i) =>
-          <div key={i} className={"feed-item"}>
+          val.id===EditId?
+          (<div key={i} className={"feed-item-add"}>
+            Title: <input type={"text"} value={EditPostTitle} onChange={(e) => setEditPostTitle(e.target.value)}/>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            Content: <input type={"text"} value={EditPostContent} onChange={(e) => setEditPostContent(e.target.value)}/>
+            <div className={"post-add-button"} onClick={(e) => editPost(`${val.id}`)}>Save Post!</div>
+          </div>)
+          :(<div key={i} className={"feed-item"}>
             <div className={"delete-item"} onClick={(e) => deletePost(`${val.id}`)}>ⓧ</div>
+            <div className={"edit-item"} onClick={(e) => EditClick(`${val.id}`)}>ⓧ</div>
             <h3 className={"feed-title"}>{ val.title }</h3>
             <p className={"feed-body"}>{ val.content }</p>
-          </div>
+          </div>)
         ) }
         <div className={"feed-item-add"}>
           Title: <input type={"text"} value={SNewPostTitle} onChange={(e) => setSNewPostTitle(e.target.value)}/>

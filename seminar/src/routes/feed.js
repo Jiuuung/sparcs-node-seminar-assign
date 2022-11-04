@@ -36,6 +36,29 @@ class FeedDB {
         if (BItemDeleted) id--;
         return BItemDeleted;
     }
+    chooseItem = (id) => {
+        function findid(element){
+            if(element.id==id){
+                return true;
+            }
+        }
+        const item=this.#LDataDB.find(findid);
+        if(item) return { success: true, data: item }
+        else return { success: false, data: "Can't find element" }
+    }
+    updateItem = ( item ) => {
+        const { id, title, content } = item;
+        const temp=this.#LDataDB.map(e=>{
+            if(e.id==parseInt(id)){
+                e.title=title;
+                e.content=content;
+                return e;
+            }
+            return e;
+        });
+        this.#LDataDB=temp;
+        return true;
+    }
 }
 
 const feedDBInst = FeedDB.getInst();
@@ -68,6 +91,27 @@ router.post('/deleteFeed', (req, res) => {
         const deleteResult = feedDBInst.deleteItem(parseInt(id));
         if (!deleteResult) return res.status(500).json({ error: "No item deleted" })
         else return res.status(200).json({ isOK: true });
+    } catch (e) {
+        return res.status(500).json({ error: e });
+    }
+})
+
+router.post('/editFeed', (req, res) => {
+    try {
+        const { id } = req.body;
+        const editById=feedDBInst.chooseItem(parseInt(id));
+        if(editById.success) return res.status(200).json(editById.data);
+        else return res.status(500).json({ error: editById.data })
+    } catch (e) {
+        return res.status(500).json({ error: e });
+    }
+})
+router.post('/editFeedSave', (req, res) => {
+    try {
+        const { id, title, content } = req.body;
+        const editById=feedDBInst.updateItem({id, title, content});
+        if(editById) return res.status(200).json({ isOK: true });
+        else return res.status(500).json({ error: "No item edited" })
     } catch (e) {
         return res.status(500).json({ error: e });
     }

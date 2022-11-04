@@ -42,3 +42,16 @@
     font-weight: bold;
     cursor: pointer;
 }
+
+.edit-item {
+    position: absolute;
+    right: 40px;
+    top: 12px;
+    color: blue;
+    font-size: 18px;
+}
+
+.edit-item:hover{
+    font-weight: bold;
+    cursor: pointer;
+}

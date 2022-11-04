@@ -9,7 +9,7 @@ const accountRouter = require('./routes/account');
 const ssrRouter = require('./routes/ssr');
 
 const app = express();
-const port = process.env.PORT;
+const port = 8080//process.env.PORT;
 
 app.use(express.json());
 
